@@ -19,7 +19,7 @@ def about_view(request, *args, **kwargs):
     except:
         percent = 0
     my_title = "My Page"
-    #html_template = "base.html"
+    html_template = "base.html"
     my_context = {
         "page_title": my_title,
         "page_visit_count": page_qs.count(),
@@ -27,4 +27,4 @@ def about_view(request, *args, **kwargs):
         "total_visit_count": qs.count(),
     }
     PageVisit.objects.create(path=request.path)
-    return render(request, my_context)
+    return render(request, html_template, my_context)
