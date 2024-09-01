@@ -138,6 +138,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.saasenv
+saasenv/
 
 # Spyder project settings
 .spyderproject
