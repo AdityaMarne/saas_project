@@ -23,4 +23,4 @@ def about_view(request, *args, **kwargs):
         "total_visit_count": qs.count(),
     }
     PageVisit.objects.create(path=request.path)
-    return render(request, 'base.html', my_context)  # Changed this line
+    return render(request, 'home.html', my_context)  # Changed this line
