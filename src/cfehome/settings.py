@@ -16,12 +16,43 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 #Email Config
-EMAIL_HOST = config("EMAIL_HOST", cast=str, default="smtp.gmail.com")
-EMAIL_PORT = config("EMAIL_PORT", cast=str, default="587") # Recommended
-EMAIL_HOST_USER = config("EMAIL_HOST_USER", cast=str, default=None)
-EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", cast=str, default=None)
-EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)  # Use EMAIL_PORT 587 for TLS
-EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool, default=False)  # Use MAIL_PORT 465 for SSL
+# EMAIL_HOST = config("EMAIL_HOST", cast=str, default="smtp.gmail.com")
+# EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
+# EMAIL_HOST_USER = config("EMAIL_HOST_USER", cast=str, default=None)
+# EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", cast=str, default=None)
+# #EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)  # Use EMAIL_PORT 587 for TLS
+# #EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool, default=False)  # Use MAIL_PORT 465 for SSL
+# ADMIN_USER_NAME = config("ADMIN_USER_NAME", default="Admin user")
+# ADMIN_USER_EMAIL = config("ADMIN_USER_EMAIL", default=None)
+
+
+# ADMINS = []
+# MANAGERS = []  # Correct the typo to ensure proper functionality
+
+# if all([ADMIN_USER_NAME, ADMIN_USER_EMAIL]):
+#     ADMINS += [
+#         (ADMIN_USER_NAME, ADMIN_USER_EMAIL)
+#     ]
+#     MANAGERS = ADMINS
+
+# Email Config
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default=None)
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default=None)
+#EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)  
+#EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool, default=False)  
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
+ADMIN_USER_NAME = config("ADMIN_USER_NAME", default="Admin user")
+ADMIN_USER_EMAIL = config("ADMIN_USER_EMAIL", default=None)
+
+ADMINS = []
+MANAGERS = []
+
+if ADMIN_USER_NAME and ADMIN_USER_EMAIL:
+    ADMINS += [(ADMIN_USER_NAME, ADMIN_USER_EMAIL)]
+    MANAGERS = ADMINS
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -54,10 +85,20 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django.contrib.sites',
+    "allauth_ui",
+    "widget_tweaks",
+    "slippers",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    "allauth.socialaccount.providers.github",
     #my-apps
     "commando",
     "visits",
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -68,14 +109,16 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Add the account middleware:
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "cfehome.urls"
-
+import os
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -87,6 +130,26 @@ TEMPLATES = [
         },
     },
 ]
+
+# TEMPLATES = [
+#     {
+#         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#         'DIRS': [BASE_DIR / 'templates'],  # Adjust this path as needed
+#         'APP_DIRS': True,
+#         'OPTIONS': {
+#             'context_processors': [
+#                 'django.template.context_processors.debug',
+#                 'django.template.context_processors.request',
+#                 'django.contrib.auth.context_processors.auth',
+#                 'django.contrib.messages.context_processors.messages',
+#             ],
+#         },
+#     },
+# ]
+
+SLIPPERS = {
+    'COMPONENT_TEMPLATE_DIRS': [BASE_DIR / 'templates' / 'components'],
+}
 
 WSGI_APPLICATION = "cfehome.wsgi.application"
 
@@ -101,18 +164,18 @@ DATABASES = {
     }
 }
 
-CONN_MAX_AGE = config("CONN_MAX_AGE", cast=int, default=300)
-DATABASE_URL = config("DATABASE_URL", default=None)
+# CONN_MAX_AGE = config("CONN_MAX_AGE", cast=int, default=300)
+# DATABASE_URL = config("DATABASE_URL", default=None)
 
-if DATABASE_URL is not None:
-    import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=CONN_MAX_AGE,
-            conn_health_checks=True,
-        )
-    }
+# if DATABASE_URL is not None:
+#     import dj_database_url
+#     DATABASES = {
+#         "default": dj_database_url.config(
+#             default=DATABASE_URL,
+#             conn_max_age=CONN_MAX_AGE,
+#             conn_health_checks=True,
+#         )
+#     }
 
 # Add these at the top of your settings.py
 # Replace the DATABASES section of your settings.py with this
@@ -148,6 +211,28 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#Django Allauth Config
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+ACCOUNT_EMAIL_VERIFICATION = "optional"  # or "none"
+
+
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[CFE]"
+ACCOUNT_EMAIL_REQUIRED = True
+#Django AllAuth config
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+
+]
+
+# Provider specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
